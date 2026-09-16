@@ -87,6 +87,12 @@ enum Driver { OFF, CPU, HUMAN }
 ## Per-slot lobby state. Index 0..3 maps to p1_*..p4_* input actions.
 var slots: Array[Dictionary] = []
 
+## Yaw of the orbiting camera, published so human input can be camera-relative.
+## The rig turns slowly during a round; without this, "up" quietly stops meaning
+## "away from me" and players fight the camera. CPUs steer in world space and
+## ignore it.
+var camera_yaw := 0.0
+
 var points_to_win := 3
 var ai_skill := 0.72  ## 0 = harmless, 1 = ruthless.
 

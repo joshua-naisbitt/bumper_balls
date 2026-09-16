@@ -5,7 +5,30 @@ A local-multiplayer sumo brawler for **Godot 4.3**, built after Mario Party's
 particular. There is no health and no attack button worth the name — you win by
 making everyone else leave.
 
-![gameplay](docs/gameplay.png)
+![endgame](docs/endgame.gif)
+
+*Round 3, deep into the squeeze: the dome has closed in, Pip knocks the last CPU
+off and takes the match.*
+
+## Demo
+
+| | |
+|---|---|
+| ![lobby](docs/shots/01-lobby.png) | ![countdown](docs/shots/02-countdown.png) |
+| Character select — claim a slot from the CPU | Countdown, everyone pinned in place |
+| ![scrum](docs/shots/03-opening-scrum.png) | ![closing in](docs/shots/04-dome-closing-in.png) |
+| Opening scrum | The rim starts closing in |
+| ![deep shrink](docs/shots/05-deep-shrink.png) | ![match win](docs/shots/06-match-win.png) |
+| Last ball on a much smaller dome | Match over |
+
+Video clips (lobby to first round, a full round with the shrink, and the
+endgame) are produced by the capture rig below rather than committed, to keep
+binaries out of the repo:
+
+```sh
+godot --path . res://tools/capture.tscn --write-movie take.avi --fixed-fps 30 \
+  --resolution 1280x720 -- --drive --start-delay=4 --quit-after=85
+```
 
 ## Rules
 
@@ -75,6 +98,26 @@ slot 1`), which is how the physics and balance above were tuned. Headless also
 spams `Parameter "m" is null` from the dummy renderer whenever a mesh is built —
 that is an artifact of having no GPU, not a problem with the project.
 
+## Development tools
+
+`tools/capture.tscn` wraps the game scene with a rig that drives slot 1 with
+**synthetic keyboard events** — real `InputEventKey`s pushed through
+`Input.parse_input_event`, so it exercises the actual InputMap and the same
+`BumperBall` code path a person would, rather than poking the ball directly. It
+presses Enter on the lobby, plays a round, and can grab screenshots on a
+schedule.
+
+```sh
+# Verify every slot's bindings resolve and respond
+godot --headless --path . res://tools/capture.tscn -- --input-test
+
+# Play a match on its own and grab stills
+godot --path . res://tools/capture.tscn -- --drive --shot=/tmp/a.png:12 --quit-after=30
+```
+
+`--input-test` is how the hand-written InputMap in `project.godot` was checked;
+all four keyboard layouts and all 31 actions resolve.
+
 ## How it fits together
 
 ```
@@ -119,5 +162,6 @@ carry further than anyone can drive themselves.
 
 ## Assets
 
-No binary assets are vendored. `tools/make_sfx.py` synthesises every sound effect
-with the Python standard library; re-run it to regenerate `audio/`.
+No binary assets are vendored beyond the screenshots in `docs/`.
+`tools/make_sfx.py` synthesises every sound effect with the Python standard
+library; re-run it to regenerate `audio/`.

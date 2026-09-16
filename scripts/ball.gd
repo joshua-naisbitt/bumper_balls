@@ -193,8 +193,11 @@ func _read_input(delta: float) -> void:
 		return
 
 	var p := slot + 1
-	_move_input = Input.get_vector(
+	var raw := Input.get_vector(
 		"p%d_left" % p, "p%d_right" % p, "p%d_up" % p, "p%d_down" % p)
+	# Hold the stick "away from the camera" and go away from the camera, whatever
+	# the orbit has done since the round started.
+	_move_input = raw.rotated(-GameConfig.camera_yaw)
 	if Input.is_action_just_pressed("p%d_dash" % p):
 		_try_dash()
 

@@ -4,7 +4,10 @@ extends Node3D
 @onready var camera: Camera3D = $Camera
 
 const BASE_HEIGHT_RATIO := 0.84
-const MIN_DISTANCE := 16.0
+## Floor on the pull-in. Framing the shrunken dome as tightly as the full one
+## cancels out the shrink on screen -- the rim closing in is the whole back half
+## of a round, so the camera holds its ground and lets the platform get smaller.
+const MIN_DISTANCE := 21.0
 const ORBIT_SPEED := 0.055
 
 var _orbit := 0.6
@@ -24,6 +27,7 @@ func shake(amount: float) -> void:
 ## below the look-at point and drops out of the frustum if the rig gets close.
 func frame(points: Array[Vector3], play_radius: float, delta: float) -> void:
 	_orbit += delta * ORBIT_SPEED
+	GameConfig.camera_yaw = _orbit
 	_shake = maxf(_shake - delta * 2.2, 0.0)
 
 	var target_focus := Vector3.ZERO
