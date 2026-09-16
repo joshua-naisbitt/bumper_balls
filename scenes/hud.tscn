@@ -1,0 +1,145 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TopBar" type="MarginContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/margin_top = 14
+
+[node name="Scores" type="HBoxContainer" parent="Root/TopBar"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 12
+
+[node name="RoundLabel" type="Label" parent="Root"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -46.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.78, 0.83, 0.93, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.7)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+
+[node name="Centre" type="VBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 118.0
+offset_bottom = 300.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Message" type="Label" parent="Root/Centre"]
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 14
+theme_override_font_sizes/font_size = 72
+horizontal_alignment = 1
+
+[node name="Sub" type="Label" parent="Root/Centre"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.89, 0.96, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+
+[node name="Lobby" type="Control" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Dim" type="ColorRect" parent="Root/Lobby"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.03, 0.04, 0.08, 0.72)
+
+[node name="Panel" type="VBoxContainer" parent="Root/Lobby"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Root/Lobby/Panel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.86, 0.48, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.85)
+theme_override_constants/outline_size = 12
+theme_override_font_sizes/font_size = 76
+text = "BUMPER BALLS"
+horizontal_alignment = 1
+
+[node name="Tagline" type="Label" parent="Root/Lobby/Panel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.83, 0.93, 1)
+theme_override_font_sizes/font_size = 22
+text = "Shove everyone else off the dome. Last ball standing wins."
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="Root/Lobby/Panel"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Slots" type="HBoxContainer" parent="Root/Lobby/Panel"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 16
+
+[node name="Spacer2" type="Control" parent="Root/Lobby/Panel"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Hint" type="Label" parent="Root/Lobby/Panel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.93, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "ENTER to start"
+horizontal_alignment = 1
+
+[node name="Hint2" type="Label" parent="Root/Lobby/Panel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.66, 0.78, 1)
+theme_override_font_sizes/font_size = 17
+text = "Left / Right to change character   •   Dash key to claim a slot   •   Gamepad B or Esc to step back"
+horizontal_alignment = 1

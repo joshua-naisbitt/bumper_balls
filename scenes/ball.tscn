@@ -1,0 +1,34 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ball.gd" id="1_ball"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_ball"]
+radius = 0.8
+
+[node name="Ball" type="RigidBody3D"]
+collision_layer = 1
+collision_mask = 3
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 8
+linear_damp = 1.1
+angular_damp = 0.8
+script = ExtResource("1_ball")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_ball")
+
+[node name="Glow" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+
+[node name="Marker" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+
+[node name="Tag" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.9, 0)
+billboard = 1
+no_depth_test = true
+pixel_size = 0.013
+text = "P1"
