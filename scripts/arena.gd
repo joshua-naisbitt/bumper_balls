@@ -13,6 +13,10 @@ const DOME_RADIUS := 48.0
 const SEGMENTS := 72
 const RINGS := 16
 const SKIRT_DROP := 2.4
+## Shrink distance that forces a mesh rebuild. The cap is ~7,300 generated
+## vertices, so rebuilding on every tiny change cost ~13 rebuilds a second during
+## the squeeze; at 0.06 the rim still moves smoothly (0.4% of the full radius).
+const REBUILD_STEP := 0.06
 
 const COLOR_INNER := Color("2f4f7a")
 const COLOR_MID := Color("3d6ea8")
@@ -73,7 +77,7 @@ func surface_height(dist: float) -> float:
 
 func set_play_radius(value: float) -> void:
 	play_radius = maxf(value, 2.0)
-	if absf(play_radius - _built_radius) > 0.03:
+	if absf(play_radius - _built_radius) > REBUILD_STEP:
 		rebuild()
 
 func spawn_transform(index: int, count: int, ball_radius: float) -> Vector3:

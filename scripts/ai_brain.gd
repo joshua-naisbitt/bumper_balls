@@ -19,7 +19,10 @@ var _dash_gate := 0.0
 
 func _init(skill_level: float, seed_index: int) -> void:
 	skill = clampf(skill_level, 0.0, 1.0)
-	_rng.seed = hash("bumper" + str(seed_index)) 
+	if GameConfig.ai_seed >= 0:
+		_rng.seed = hash("bumper:%d:%d" % [GameConfig.ai_seed, seed_index])
+	else:
+		_rng.randomize()
 	_wander_phase = _rng.randf() * TAU
 
 func reset() -> void:

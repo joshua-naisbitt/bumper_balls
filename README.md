@@ -51,9 +51,10 @@ godot --path . res://tools/capture.tscn --write-movie take.avi --fixed-fps 30 \
 Gamepads work too: **slot N uses joypad device N-1**, left stick or d-pad to
 move, A to dash, B to step back, Start to begin.
 
-In the lobby, press a slot's dash key to take it over from the CPU, `Left`/`Right`
-to change character, and `Enter` to start. `Esc` returns to the lobby mid-match;
-`R` restarts the match.
+In the lobby, a slot's dash key cycles it through **CPU → Player → Empty**
+(gamepad B steps back the other way), `Left`/`Right` changes character, and
+`Enter` starts. A slot never empties if that would leave fewer than two balls.
+`Esc` returns to the lobby mid-match; `R` restarts the match.
 
 **Dash** is a short burst on a cooldown. During the burst your bumps hit roughly
 twice as hard, which is how most knockouts actually happen. Dashing in mid-air
@@ -92,6 +93,9 @@ There is an attract / smoke-test mode that boots straight into an all-CPU match:
 godot --path . -- --cpu-demo                  # loops matches forever
 godot --headless --path . -- --cpu-demo --quit-after=120
 ```
+
+CPU randomness is seeded from system entropy, so no two runs play out the same.
+Pass `--ai-seed=N` for a reproducible run when tuning or bug-hunting.
 
 Headless runs print one line per round (`[demo] round 3  16.2s  rim 9.4  winner
 slot 1`), which is how the physics and balance above were tuned. Headless also

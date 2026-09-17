@@ -159,13 +159,14 @@ func refresh_lobby() -> void:
 
 		match int(data["control"]):
 			GameConfig.Driver.HUMAN:
-				card["state"].text = "PLAYER %d\n%s" % [i + 1, KEY_HINTS[i]]
+				card["state"].text = "PLAYER %d\n%s\n%s again to sit out" % [
+					i + 1, KEY_HINTS[i], KEY_HINTS[i].split(" + ")[1]]
 				card["state"].add_theme_color_override("font_color", Color(1, 1, 1))
 			GameConfig.Driver.CPU:
 				card["state"].text = "CPU\npress %s to take over" % KEY_HINTS[i].split(" + ")[1]
 				card["state"].add_theme_color_override("font_color", Color(0.65, 0.7, 0.82))
 			_:
-				card["state"].text = "EMPTY"
+				card["state"].text = "EMPTY\npress %s to fill" % KEY_HINTS[i].split(" + ")[1]
 				card["state"].add_theme_color_override("font_color", Color(0.45, 0.48, 0.58))
 
 		card["panel"].modulate = Color(1, 1, 1, 0.38) if off else Color(1, 1, 1, 1)

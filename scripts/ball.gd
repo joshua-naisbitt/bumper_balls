@@ -136,6 +136,7 @@ func reset_to(pos: Vector3) -> void:
 	_squash = 0.0
 	_move_input = Vector2.ZERO
 	_bump_lock.clear()
+	collision_layer = LAYER_BALLS
 	collision_mask = LAYER_BALLS | LAYER_ARENA
 	freeze = false
 	visible = true
@@ -256,6 +257,11 @@ func _die() -> void:
 	alive = false
 	freeze = true
 	visible = false
+	# A frozen body is still a solid, and this one is parked below the rim where
+	# everyone else falls past it. Leaving it collidable meant invisible bounces
+	# and phantom bump impulses on the way down.
+	collision_layer = 0
+	collision_mask = 0
 	Sfx.play("fall", -3.0, randf_range(0.95, 1.05))
 	knocked_out.emit(self)
 

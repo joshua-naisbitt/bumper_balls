@@ -93,6 +93,10 @@ var slots: Array[Dictionary] = []
 ## ignore it.
 var camera_yaw := 0.0
 
+## -1 means seed the CPUs from system entropy. Any other value makes a run
+## reproducible, which is what the headless soaks want and a party game does not.
+var ai_seed := -1
+
 var points_to_win := 3
 var ai_skill := 0.72  ## 0 = harmless, 1 = ruthless.
 
@@ -137,9 +141,12 @@ func human_count() -> int:
 	return n
 
 func cycle_character(slot_index: int, step: int) -> void:
+	# Reserve against every slot, not just the active ones: an empty slot keeps
+	# its character, so ignoring it here let a slot cycle onto that character and
+	# then collide with it the moment the empty slot rejoined.
 	var taken := {}
 	for i in slots.size():
-		if i != slot_index and is_active(i):
+		if i != slot_index:
 			taken[slots[i]["character"]] = true
 	var idx: int = slots[slot_index]["character"]
 	# Skip past characters another slot already claimed so colours stay unique.

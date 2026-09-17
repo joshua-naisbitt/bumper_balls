@@ -31,6 +31,7 @@ var _radius := START_RADIUS
 var _last_beep := 99
 var _knockout_order: Array[int] = []
 var _warned := false
+var _match_announced := false
 var _demo := false
 
 func _ready() -> void:
@@ -43,6 +44,9 @@ func _ready() -> void:
 ## match. Handy as an attract mode and as a headless smoke test of the loop.
 func _check_demo_mode() -> void:
 	var args := OS.get_cmdline_user_args()
+	for arg in args:
+		if arg.begins_with("--ai-seed="):
+			GameConfig.ai_seed = int(arg.split("=")[1])
 	if not args.has("--cpu-demo"):
 		return
 	_demo = true
@@ -98,13 +102,14 @@ func _lobby_input() -> void:
 	var dirty := false
 	for i in GameConfig.MAX_PLAYERS:
 		var p := i + 1
+		# One key per slot cycles CPU -> Player -> Empty. Keyboard players have no
+		# other way back out: p*_leave is gamepad-only, and game_back is ignored
+		# in the lobby, so a claimed slot used to be permanent.
 		if Input.is_action_just_pressed("p%d_join" % p):
-			# Join claims the slot for a human, whether it was empty or a CPU.
-			if GameConfig.slots[i]["control"] != GameConfig.Driver.HUMAN:
-				GameConfig.slots[i]["control"] = GameConfig.Driver.HUMAN
-				dirty = true
+			GameConfig.slots[i]["control"] = _cycle_driver(i, 1)
+			dirty = true
 		if Input.is_action_just_pressed("p%d_leave" % p):
-			GameConfig.slots[i]["control"] = _next_leave_state(i)
+			GameConfig.slots[i]["control"] = _cycle_driver(i, -1)
 			dirty = true
 		if Input.is_action_just_pressed("p%d_left" % p):
 			GameConfig.cycle_character(i, -1)
@@ -120,15 +125,15 @@ func _lobby_input() -> void:
 	if Input.is_action_just_pressed("game_start") and GameConfig.active_count() >= 2:
 		_start_match()
 
-func _next_leave_state(slot_index: int) -> int:
-	# HUMAN -> CPU -> OFF -> CPU, but never drop below two active balls.
-	match int(GameConfig.slots[slot_index]["control"]):
-		GameConfig.Driver.HUMAN:
-			return GameConfig.Driver.CPU
-		GameConfig.Driver.CPU:
-			return GameConfig.Driver.OFF if GameConfig.active_count() > 2 else GameConfig.Driver.CPU
-		_:
-			return GameConfig.Driver.CPU
+## Step a slot through CPU -> Player -> Empty (or backwards), skipping Empty
+## when it would leave fewer than two balls in the match.
+func _cycle_driver(slot_index: int, step: int) -> int:
+	var value: int = GameConfig.slots[slot_index]["control"]
+	for _attempt in 3:
+		value = wrapi(value + step, 0, 3)
+		if value != GameConfig.Driver.OFF or GameConfig.active_count() > 2:
+			return value
+	return GameConfig.slots[slot_index]["control"]
 
 # --- match / round ---------------------------------------------------------
 
@@ -163,6 +168,7 @@ func _start_round() -> void:
 	_round_time = 0.0
 	_knockout_order.clear()
 	_warned = false
+	_match_announced = false
 
 	for i in balls.size():
 		balls[i].reset_to(arena.spawn_transform(i, balls.size(), BumperBall.RADIUS))
@@ -256,20 +262,28 @@ func _tick_intermission(delta: float) -> void:
 		_start_round()
 		return
 
-	# Match over: hold on the result until someone presses a button.
-	var winners := GameConfig.match_winners()
-	if winners.size() > 0 and _timer > -MATCH_END_HOLD:
-		var names := PackedStringArray()
-		for w in winners:
-			names.append(str(GameConfig.character_of(w)["name"]))
-		var color: Color = GameConfig.character_of(winners[0])["color"]
-		hud.set_message("%s TAKES THE MATCH" % " & ".join(names),
-			"ENTER for a rematch  •  ESC for the lobby", color)
-		if _timer > -MATCH_END_HOLD - delta:
-			Sfx.play("match_win", -2.0)
+	# Match over: announce exactly once, then hold until someone presses a button.
+	# The old guard here compared _timer against the hold length, which stayed
+	# true for the whole hold and re-fired the fanfare on every single frame.
+	if not _match_announced:
+		_match_announced = true
+		_announce_match()
 
 	if _timer < -MATCH_END_HOLD and (Input.is_action_just_pressed("game_start") or _demo):
 		_start_match()
+
+func _announce_match() -> void:
+	var winners := GameConfig.match_winners()
+	if winners.is_empty():
+		return
+	var names := PackedStringArray()
+	for w in winners:
+		names.append(str(GameConfig.character_of(w)["name"]))
+	var color: Color = GameConfig.character_of(winners[0])["color"]
+	hud.set_message("%s TAKES THE MATCH" % " & ".join(names),
+		"ENTER for a rematch  •  ESC for the lobby", color)
+	hud.pop_message()
+	Sfx.play("match_win", -2.0)
 
 # --- signals / helpers -----------------------------------------------------
 
