@@ -317,6 +317,7 @@ func _process(delta: float) -> void:
 	var basis := _basis_from_up(dome_normal)
 	_marker.global_transform = Transform3D(basis, global_position + Vector3.UP * (ground_y - global_position.y + 0.04))
 	_marker.visible = not _off_edge
+	_tag.no_depth_test = not _off_edge
 
 	var pop := 1.0 + _squash * 0.22
 	_mesh.scale = Vector3(pop, 1.0 / pop, pop)

@@ -33,8 +33,12 @@ func _ready() -> void:
 			_start_delay = float(a.split("=")[1])
 	for a in args:
 		if a.begins_with("--shot="):
-			var parts := a.split("=")[1].split(":")
-			_queue_shot(parts[0], float(parts[1]))
+			var spec := a.split("=", true, 1)[1]
+			var cut := spec.rfind(":")
+			if cut <= 0:
+				push_error("--shot needs PATH:SECONDS, got '%s'" % spec)
+				continue
+			_queue_shot(spec.substr(0, cut), float(spec.substr(cut + 1)))
 		elif a.begins_with("--quit-after="):
 			_queue_quit(float(a.split("=")[1]))
 
@@ -72,13 +76,13 @@ func _process(delta: float) -> void:
 
 	# Press Enter on the lobby exactly as a player would, after letting the
 	# character-select screen sit on camera for a moment.
-	if main.state == 0 and _elapsed >= _start_delay:
+	if main.state == main.State.LOBBY and _elapsed >= _start_delay:
 		if not _started:
 			_started = true
 			await _tap("start")
 		return
 	# Rematch once the match result has been on screen long enough to read.
-	if main.state == 4 and _dash_gate <= 0.0:
+	if main.state == main.State.MATCH_END and _dash_gate <= 0.0:
 		_dash_gate = 6.0
 		await _tap("start")
 		return
@@ -88,7 +92,7 @@ func _process(delta: float) -> void:
 		if b.is_human and b.alive:
 			me = b
 			break
-	if me == null or main.state != 2:
+	if me == null or main.state != main.State.PLAYING:
 		_release_all()
 		return
 

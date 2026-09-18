@@ -83,6 +83,9 @@ func set_message(main_text: String, sub_text: String = "", color: Color = Color.
 
 func pop_message() -> void:
 	# Small scale punch so the countdown reads as a beat rather than a text swap.
+	# The label has just had its text replaced, so wait for the container to lay
+	# it out -- reading size first gives (0, 0) and pops from the corner.
+	await get_tree().process_frame
 	_message.pivot_offset = _message.size * 0.5
 	_message.scale = Vector2(1.45, 1.45)
 	var tween := create_tween()
@@ -104,8 +107,11 @@ func _build_slot_cards() -> void:
 		style.set_border_width_all(3)
 		panel.add_theme_stylebox_override("panel", style)
 
+		# Top-aligned, not centred: the human card carries an extra line of key
+		# hints, and centring pushed its title, swatch and name out of line with
+		# the CPU cards sitting next to it.
 		var box := VBoxContainer.new()
-		box.alignment = BoxContainer.ALIGNMENT_CENTER
+		box.alignment = BoxContainer.ALIGNMENT_BEGIN
 		box.add_theme_constant_override("separation", 6)
 		panel.add_child(box)
 
@@ -134,6 +140,9 @@ func _build_slot_cards() -> void:
 		state_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		state_label.add_theme_font_size_override("font_size", 15)
 		state_label.add_theme_color_override("font_color", Color(0.65, 0.7, 0.82))
+		# Reserve room for the tallest variant so the card never resizes as the
+		# slot cycles between CPU, player and empty.
+		state_label.custom_minimum_size = Vector2(0, 62)
 		box.add_child(state_label)
 
 		_lobby_slots.add_child(panel)

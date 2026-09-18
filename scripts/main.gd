@@ -146,6 +146,12 @@ func _start_match() -> void:
 
 func _clear_balls() -> void:
 	for b in balls:
+		# queue_free only takes effect at the end of the frame. Until then these
+		# balls still simulate and still emit, and a knockout arriving after the
+		# next round has been set up would be recorded against it.
+		b.knocked_out.disconnect(_on_ball_knocked_out)
+		b.bumped.disconnect(_on_ball_bumped)
+		b.set_physics_process(false)
 		b.queue_free()
 	balls.clear()
 
