@@ -59,7 +59,7 @@ func _check_demo_mode() -> void:
 		if arg.begins_with("--quit-after="):
 			var seconds := float(arg.split("=")[1])
 			get_tree().create_timer(seconds).timeout.connect(func() -> void:
-				get_tree().quit())
+				Sfx.quit_game())
 
 ## Every button and tap in the HUD arrives here as a request. The keyboard and
 ## gamepad paths below call the same functions, so each action has one

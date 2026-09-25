@@ -123,7 +123,7 @@ func _ready() -> void:
 	_check(str(hud._lobby_hint.text).contains("Enter"), "lobby hints switch to keyboard wording")
 
 	print("[touch_test] %d/%d passed" % [_checks - _failures, _checks])
-	get_tree().quit(1 if _failures > 0 else 0)
+	Sfx.quit_game(1 if _failures > 0 else 0)
 
 # --- helpers ------------------------------------------------------------------
 

@@ -327,8 +327,8 @@ func _process(delta: float) -> void:
 	_tag.global_transform = Transform3D(Basis(), global_position + Vector3.UP * 1.9)
 
 	var ground_y: float = _arena.surface_height(distance_from_centre()) if _arena else 0.0
-	var basis := _basis_from_up(dome_normal)
-	_marker.global_transform = Transform3D(basis, global_position + Vector3.UP * (ground_y - global_position.y + 0.04))
+	var marker_basis := _basis_from_up(dome_normal)
+	_marker.global_transform = Transform3D(marker_basis, global_position + Vector3.UP * (ground_y - global_position.y + 0.04))
 	_marker.visible = not _off_edge
 	_tag.no_depth_test = not _off_edge
 

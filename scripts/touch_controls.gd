@@ -209,19 +209,19 @@ func _draw_stick(color: Color) -> void:
 func _draw_dash(color: Color) -> void:
 	var center := _dash_center()
 	var charge := ball.dash_charge()
-	var ready := charge >= 1.0
+	var charged := charge >= 1.0
 	var held := _dash_index != -1
 	var radius := DASH_RADIUS * (0.92 if held else 1.0)
-	var fill := Color(color.r, color.g, color.b, 0.85 if ready else 0.3)
+	var fill := Color(color.r, color.g, color.b, 0.85 if charged else 0.3)
 	if held:
 		fill = fill.lightened(0.25)
 	draw_circle(center, radius, fill)
 	draw_arc(center, radius, 0.0, TAU, 64, Color(1, 1, 1, 0.35), 3.0, true)
-	if not ready:
+	if not charged:
 		# Cooldown sweeps clockwise from twelve o'clock.
 		draw_arc(center, radius + 7.0, -PI * 0.5, -PI * 0.5 + TAU * charge, 64,
 			Color(1, 1, 1, 0.9), 6.0, true)
-	_draw_label(center, "DASH", 26, Color(1, 1, 1, 1.0 if ready else 0.55))
+	_draw_label(center, "DASH", 26, Color(1, 1, 1, 1.0 if charged else 0.55))
 
 func _draw_label(center: Vector2, text: String, font_size: int, color: Color) -> void:
 	var width := _font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x

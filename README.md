@@ -191,7 +191,7 @@ godot --path . res://tools/capture.tscn -- --drive --shot=/tmp/a.png:12 --quit-a
 ```
 
 `--input-test` is how the hand-written InputMap in `project.godot` was checked;
-all four keyboard layouts and all 31 actions resolve.
+all four keyboard layouts and all 32 actions resolve.
 
 Three regression suites drive the real game with synthetic input and exit
 non-zero on failure:

@@ -39,8 +39,13 @@ async function boot(context, label) {
   const page = await context.newPage();
   const logs = [];
   const errors = [];
-  page.on('console', (m) => logs.push(m.text()));
-  page.on('pageerror', (e) => errors.push(String(e)));
+  // Uncaught exceptions and anything the engine logs as a warning or error
+  // (Godot routes push_warning/push_error and engine errors to the console).
+  page.on('console', (m) => {
+    logs.push(m.text());
+    if (m.type() === 'error' || m.type() === 'warning') errors.push(`console ${m.type()}: ${m.text()}`);
+  });
+  page.on('pageerror', (e) => errors.push(`uncaught: ${e}`));
   await page.goto(PAGE);
   const start = Date.now();
   while (!logs.some((l) => l.includes('[controls]')) && Date.now() - start < 120000) await sleep(250);
@@ -180,7 +185,7 @@ const phone = await browser.newContext({ ...PIXEL_7, deviceScaleFactor: 1 });
   await page.screenshot({ path: `${OUT}/phone-6-portrait.png` });
   const rotate = findColor(`${OUT}/phone-6-portrait.png`, [255, 219, 122], 18, [0.0, 0.3, 1.0, 0.7]);
   check(rotate !== null, 'portrait on a phone shows the turn-sideways prompt');
-  check(errors.length === 0, `no page errors on phone (${errors.length})`);
+  check(errors.length === 0, `no errors or warnings in the console on phone (${errors.length})`);
   errors.forEach((e) => console.log('   ', e));
 }
 // One software-rendered WebGL game at a time is plenty for this machine.
@@ -202,7 +207,8 @@ const desk = await browser.newContext({ viewport: { width: 1280, height: 720 } }
   check(paused !== null, 'Enter starts and Esc pauses in a desktop browser');
   const noStick = findColor(`${OUT}/desk-2-pause.png`, [255, 91, 91], 40, [0.8, 0.6, 1.0, 1.0]);
   check(noStick === null, 'no touch controls on desktop');
-  check(errors.length === 0, `no page errors on desktop (${errors.length})`);
+  check(errors.length === 0, `no errors or warnings in the console on desktop (${errors.length})`);
+  errors.forEach((e) => console.log('   ', e));
 }
 
 await browser.close();

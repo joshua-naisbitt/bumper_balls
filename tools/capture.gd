@@ -50,7 +50,7 @@ func _queue_shot(path: String, at: float) -> void:
 
 func _queue_quit(at: float) -> void:
 	await get_tree().create_timer(at).timeout
-	get_tree().quit()
+	Sfx.quit_game()
 
 # --- synthetic input -------------------------------------------------------
 
@@ -144,13 +144,13 @@ func _input_test() -> void:
 	var missing := []
 	for p in range(1, 5):
 		for a in ["up", "down", "left", "right", "dash", "join", "leave"]:
-			var name := "p%d_%s" % [p, a]
-			if not InputMap.has_action(name):
-				missing.append(name)
-	for a in ["game_start", "game_restart", "game_back"]:
+			var action := "p%d_%s" % [p, a]
+			if not InputMap.has_action(action):
+				missing.append(action)
+	for a in ["game_start", "game_restart", "game_back", "game_pause"]:
 		if not InputMap.has_action(a):
 			missing.append(a)
-	print("[input] missing actions: ", missing if missing.size() > 0 else "none")
+	print("[input] missing actions: ", str(missing) if missing.size() > 0 else "none")
 
 	# Every slot's keyboard binding, pressed for real through the InputMap.
 	var layouts := [
@@ -186,4 +186,4 @@ func _input_test() -> void:
 		await get_tree().process_frame
 		print("[input] P%d up=%s down=%s left=%s right=%s dash=%s" % [
 			p + 1, results[0], results[1], results[2], results[3], dash_ok])
-	get_tree().quit()
+	Sfx.quit_game()

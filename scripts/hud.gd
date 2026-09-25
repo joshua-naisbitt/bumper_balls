@@ -90,7 +90,7 @@ func _notification(what: int) -> void:
 			# Android's back button (quit_on_go_back is off in project settings).
 			match _phase:
 				&"lobby":
-					get_tree().quit()
+					Sfx.quit_game()
 				&"match_end":
 					lobby_requested.emit()
 				_:

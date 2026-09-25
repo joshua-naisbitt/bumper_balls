@@ -40,12 +40,12 @@ func _ready() -> void:
 	main.hud.show_match_actions()
 	await _frames(20)
 	await _shot(out, "4-results")
-	get_tree().quit()
+	Sfx.quit_game()
 
-func _shot(dir: String, name: String) -> void:
+func _shot(dir: String, label: String) -> void:
 	await RenderingServer.frame_post_draw
-	get_viewport().get_texture().get_image().save_png("%s/%s.png" % [dir, name])
-	print("[ui_shots] ", name)
+	get_viewport().get_texture().get_image().save_png("%s/%s.png" % [dir, label])
+	print("[ui_shots] ", label)
 
 func _to_window(ui: Vector2) -> Vector2:
 	return get_tree().root.get_final_transform() * ui

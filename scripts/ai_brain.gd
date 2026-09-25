@@ -78,7 +78,7 @@ func steer(me: BumperBall, arena: Arena, delta: float) -> Vector2:
 		var their_out := their_pos.normalized() if their_pos.length() > 0.01 else attack
 		attack = attack.lerp(their_out, lerpf(0.05, 0.4, skill)).normalized()
 
-		_consider_dash(me, target, here, their_pos, my_ratio, arena)
+		_consider_dash(me, here, their_pos, my_ratio, arena)
 	else:
 		attack = to_centre
 
@@ -99,7 +99,7 @@ func steer(me: BumperBall, arena: Arena, delta: float) -> Vector2:
 		return Vector2.ZERO
 	return desire.normalized()
 
-func _consider_dash(me: BumperBall, target: BumperBall, here: Vector2, there: Vector2,
+func _consider_dash(me: BumperBall, here: Vector2, there: Vector2,
 		my_ratio: float, arena: Arena) -> void:
 	if _dash_gate > 0.0:
 		return
