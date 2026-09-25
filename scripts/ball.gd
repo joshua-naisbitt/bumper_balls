@@ -7,6 +7,10 @@ class_name BumperBall
 
 signal knocked_out(ball: BumperBall)
 signal bumped(strength: float)
+## Fired on each ball that takes an impulse, with the same 0..1 strength. Unlike
+## `bumped` (one per collision, for sound and camera shake) this tells you which
+## ball got hit, which is what haptics need.
+signal hit(strength: float)
 
 const RADIUS := 0.8
 const LAYER_BALLS := 1
@@ -124,7 +128,9 @@ func _apply_look() -> void:
 	_tag.outline_modulate = Color(0, 0, 0, 0.85)
 	_tag.font_size = 44 if is_human else 32
 	_tag.outline_size = 16 if is_human else 10
-	_tag.pixel_size = 0.013
+	# Name tags are 3D, so the handheld UI scale does not reach them. On a phone
+	# the tag is how you find yourself; scale it along with the rest.
+	_tag.pixel_size = 0.013 * Controls.UI_SCALE[Controls.form_factor]
 	_tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_tag.no_depth_test = true
 
@@ -164,6 +170,12 @@ func is_grounded() -> bool:
 		return false
 	var surface := _arena.surface_height(distance_from_centre()) + RADIUS
 	return global_position.y <= surface + 0.3
+
+## 0 right after a dash, 1 when the next one is ready. Drives the touch button's
+## cooldown ring.
+func dash_charge() -> float:
+	var cooldown := float(stats.get("dash_cooldown", 1.1))
+	return 1.0 - clampf(_cooldown / maxf(cooldown, 0.001), 0.0, 1.0)
 
 func bump_multiplier() -> float:
 	var m: float = stats["bump_power"]
@@ -294,6 +306,7 @@ func _on_body_entered(body: Node) -> void:
 
 	apply_central_impulse((away + Vector3.UP * BUMP_LIFT).normalized() * power * mass)
 	_squash = minf(1.0, 0.35 + approach * 0.09)
+	hit.emit(clampf(approach / 14.0, 0.0, 1.0))
 
 	# Both balls run this handler, so only one of them needs to make the noise.
 	if get_instance_id() < id:

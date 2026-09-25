@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://tools/ui_shots.gd" id="1_us"]
+[ext_resource type="PackedScene" path="res://scenes/main.tscn" id="2_main"]
+
+[node name="UiShots" type="Node"]
+process_mode = 3
+script = ExtResource("1_us")
+
+[node name="Main" parent="." instance=ExtResource("2_main")]
+process_mode = 1

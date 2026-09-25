@@ -75,7 +75,9 @@ func _distance_to_fit_width(radius: float) -> float:
 	var size := view.get_visible_rect().size
 	if size.x <= 0.0 or size.y <= 0.0:
 		return 0.0
-	var aspect := size.x / size.y
+	# Only the width the on-screen controls leave uncovered counts.
+	var usable := clampf(1.0 - Controls.reserved_width / size.x, 0.3, 1.0)
+	var aspect := size.x * usable / size.y
 	var tilt := sqrt(1.0 + BASE_HEIGHT_RATIO * BASE_HEIGHT_RATIO)
 	var half_width := tan(deg_to_rad(camera.fov * 0.5)) * aspect * tilt
 	return radius * WIDTH_MARGIN / maxf(half_width, 0.001)

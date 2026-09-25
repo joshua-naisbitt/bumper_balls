@@ -4,7 +4,7 @@ extends Node3D
 
 const BALL_SCENE := preload("res://scenes/ball.tscn")
 
-const START_RADIUS := 13.5
+const START_RADIUS := Arena.MAX_RADIUS
 const MIN_RADIUS := 4.2
 const SHRINK_DELAY := 7.0        ## Grace period before the dome starts closing in.
 const SHRINK_RATE := 0.40        ## Units per second at the start of the squeeze.
@@ -32,11 +32,13 @@ var _last_beep := 99
 var _knockout_order: Array[int] = []
 var _warned := false
 var _match_announced := false
+var _match_actions_shown := false
 var _demo := false
 
 func _ready() -> void:
 	GameConfig.reset_slots()
 	arena.set_play_radius(START_RADIUS)
+	_connect_hud()
 	_enter_lobby()
 	_check_demo_mode()
 
@@ -59,6 +61,47 @@ func _check_demo_mode() -> void:
 			get_tree().create_timer(seconds).timeout.connect(func() -> void:
 				get_tree().quit())
 
+## Every button and tap in the HUD arrives here as a request. The keyboard and
+## gamepad paths below call the same functions, so each action has one
+## implementation however it was asked for.
+func _connect_hud() -> void:
+	hud.start_requested.connect(_try_start_match)
+	hud.rematch_requested.connect(func() -> void:
+		if state == State.MATCH_END:
+			_start_match())
+	hud.lobby_requested.connect(_enter_lobby)
+	hud.restart_requested.connect(_start_match)
+	hud.pause_requested.connect(func() -> void: _set_paused(true))
+	hud.resume_requested.connect(func() -> void: _set_paused(false))
+	hud.slot_pressed.connect(func(slot: int) -> void:
+		if state == State.LOBBY:
+			GameConfig.slots[slot]["control"] = _cycle_driver(slot, 1)
+			_lobby_changed())
+	hud.character_step.connect(func(slot: int, step: int) -> void:
+		if state == State.LOBBY:
+			GameConfig.cycle_character(slot, step)
+			_lobby_changed())
+
+func _set_paused(value: bool) -> void:
+	if value and not _in_match():
+		return
+	get_tree().paused = value
+	hud.show_pause(value)
+
+func _in_match() -> bool:
+	return state in [State.COUNTDOWN, State.PLAYING, State.ROUND_END]
+
+## Moves the state machine and tells the HUD which screen it is on.
+func _set_state(value: int) -> void:
+	state = value
+	match value:
+		State.LOBBY:
+			hud.set_phase(&"lobby")
+		State.MATCH_END:
+			hud.set_phase(&"match_end")
+		_:
+			hud.set_phase(&"match")
+
 func _process(delta: float) -> void:
 	match state:
 		State.LOBBY:
@@ -70,11 +113,8 @@ func _process(delta: float) -> void:
 		State.ROUND_END, State.MATCH_END:
 			_tick_intermission(delta)
 
-	if state != State.LOBBY:
-		if Input.is_action_just_pressed("game_back"):
-			_enter_lobby()
-		elif Input.is_action_just_pressed("game_restart"):
-			_start_match()
+	if _in_match() and Input.is_action_just_pressed("game_restart"):
+		_start_match()
 
 	_update_camera(delta)
 
@@ -88,7 +128,8 @@ func _update_camera(delta: float) -> void:
 # --- lobby -----------------------------------------------------------------
 
 func _enter_lobby() -> void:
-	state = State.LOBBY
+	_set_paused(false)
+	_set_state(State.LOBBY)
 	_clear_balls()
 	_radius = START_RADIUS
 	arena.set_play_radius(_radius)
@@ -119,10 +160,17 @@ func _lobby_input() -> void:
 			dirty = true
 
 	if dirty:
-		hud.refresh_lobby()
-		Sfx.play("beep", -12.0, 1.2)
+		_lobby_changed()
 
-	if Input.is_action_just_pressed("game_start") and GameConfig.active_count() >= 2:
+	if Input.is_action_just_pressed("game_start"):
+		_try_start_match()
+
+func _lobby_changed() -> void:
+	hud.refresh_lobby()
+	Sfx.play("beep", -12.0, 1.2)
+
+func _try_start_match() -> void:
+	if state == State.LOBBY and GameConfig.active_count() >= 2:
 		_start_match()
 
 ## Step a slot through CPU -> Player -> Empty (or backwards), skipping Empty
@@ -138,6 +186,7 @@ func _cycle_driver(slot_index: int, step: int) -> int:
 # --- match / round ---------------------------------------------------------
 
 func _start_match() -> void:
+	_set_paused(false)
 	GameConfig.reset_scores()
 	round_number = 0
 	hud.show_lobby(false)
@@ -164,7 +213,10 @@ func _spawn_balls() -> void:
 			GameConfig.is_human(slot_index), arena, GameConfig.ai_skill)
 		ball.knocked_out.connect(_on_ball_knocked_out)
 		ball.bumped.connect(_on_ball_bumped)
+		ball.hit.connect(_on_ball_hit.bind(ball))
 		balls.append(ball)
+	var touch_slot := GameConfig.first_human_slot()
+	hud.set_touch_player(touch_slot, _ball_for_slot(touch_slot))
 
 func _start_round() -> void:
 	round_number += 1
@@ -175,12 +227,13 @@ func _start_round() -> void:
 	_knockout_order.clear()
 	_warned = false
 	_match_announced = false
+	_match_actions_shown = false
 
 	for i in balls.size():
 		balls[i].reset_to(arena.spawn_transform(i, balls.size(), BumperBall.RADIUS))
 		balls[i].set_frozen(true)
 
-	state = State.COUNTDOWN
+	_set_state(State.COUNTDOWN)
 	_timer = COUNTDOWN_LENGTH
 	_last_beep = 99
 	hud.set_round("ROUND %d   •   FIRST TO %d" % [round_number, GameConfig.points_to_win])
@@ -200,7 +253,7 @@ func _tick_countdown(delta: float) -> void:
 		Sfx.play("go", -4.0)
 		for b in balls:
 			b.set_frozen(false)
-		state = State.PLAYING
+		_set_state(State.PLAYING)
 		get_tree().create_timer(0.7).timeout.connect(func() -> void:
 			if state == State.PLAYING:
 				hud.set_message("", ""))
@@ -226,7 +279,7 @@ func _tick_round(delta: float) -> void:
 		_finish_round()
 
 func _finish_round() -> void:
-	state = State.ROUND_END
+	_set_state(State.ROUND_END)
 	_timer = ROUND_END_HOLD
 
 	var survivors := _alive_balls()
@@ -256,7 +309,7 @@ func _finish_round() -> void:
 			round_number, _round_time, _radius, winner_slot])
 
 	if GameConfig.match_winners().size() > 0:
-		state = State.MATCH_END
+		_set_state(State.MATCH_END)
 		_timer = ROUND_END_HOLD
 
 func _tick_intermission(delta: float) -> void:
@@ -275,8 +328,18 @@ func _tick_intermission(delta: float) -> void:
 		_match_announced = true
 		_announce_match()
 
-	if _timer < -MATCH_END_HOLD and (Input.is_action_just_pressed("game_start") or _demo):
+	# The rematch / lobby choice only appears once the result has been on screen
+	# long enough to read, so a tap or key still in flight from the last round
+	# cannot skip straight past it.
+	if _timer >= -MATCH_END_HOLD:
+		return
+	if not _match_actions_shown:
+		_match_actions_shown = true
+		hud.show_match_actions()
+	if Input.is_action_just_pressed("game_start") or _demo:
 		_start_match()
+	elif Input.is_action_just_pressed("game_back"):
+		_enter_lobby()
 
 func _announce_match() -> void:
 	var winners := GameConfig.match_winners()
@@ -286,17 +349,42 @@ func _announce_match() -> void:
 	for w in winners:
 		names.append(str(GameConfig.character_of(w)["name"]))
 	var color: Color = GameConfig.character_of(winners[0])["color"]
-	hud.set_message("%s TAKES THE MATCH" % " & ".join(names),
-		"ENTER for a rematch  •  ESC for the lobby", color)
-	hud.pop_message()
+	hud.show_match_result("%s TAKES THE MATCH" % " & ".join(names), color)
 	Sfx.play("match_win", -2.0)
 
 # --- signals / helpers -----------------------------------------------------
 
 func _on_ball_knocked_out(ball: BumperBall) -> void:
-	_knockout_order.append(ball.slot)
 	camera_rig.shake(0.35)
+	_rumble(ball, 1.0, 0.35)
+	# Once the round is decided the winner is still rolling, and often rolls off
+	# during the results hold. That fall is not part of the round, so keep it
+	# out of the knockout record and leave the score chips as the round ended.
+	if state != State.PLAYING:
+		return
+	_knockout_order.append(ball.slot)
 	hud.refresh_scores(_alive_slots())
+
+func _on_ball_hit(strength: float, ball: BumperBall) -> void:
+	_rumble(ball, 0.3 + strength * 0.6, 0.06 + strength * 0.1)
+
+## Buzz whatever the player whose ball this is is holding: the phone for the
+## touch player, their own pad for everyone else. CPUs feel nothing.
+func _rumble(ball: BumperBall, intensity: float, seconds: float) -> void:
+	# A ball from a match that has just been torn down can still report a hit
+	# before it is freed.
+	if not ball.is_human or not balls.has(ball):
+		return
+	if Controls.is_touch() and ball.slot == GameConfig.first_human_slot():
+		Input.vibrate_handheld(int(seconds * 1000.0))
+	elif Input.get_connected_joypads().has(ball.slot):
+		Input.start_joy_vibration(ball.slot, intensity * 0.6, intensity, seconds)
+
+func _ball_for_slot(slot: int) -> BumperBall:
+	for b in balls:
+		if b.slot == slot:
+			return b
+	return null
 
 func _on_ball_bumped(strength: float) -> void:
 	camera_rig.shake(strength * 0.5)

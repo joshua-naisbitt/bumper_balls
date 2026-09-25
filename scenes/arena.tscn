@@ -9,6 +9,8 @@ script = ExtResource("1_arena")
 
 [node name="Surface" type="MeshInstance3D" parent="."]
 
+[node name="Skirt" type="MeshInstance3D" parent="."]
+
 [node name="Rim" type="MeshInstance3D" parent="."]
 cast_shadow = 0
 

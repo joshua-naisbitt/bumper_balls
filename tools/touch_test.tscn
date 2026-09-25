@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://tools/touch_test.gd" id="1_tt"]
+[ext_resource type="PackedScene" path="res://scenes/main.tscn" id="2_main"]
+
+[node name="TouchTest" type="Node"]
+process_mode = 3
+script = ExtResource("1_tt")
+
+[node name="Main" parent="." instance=ExtResource("2_main")]
+process_mode = 1

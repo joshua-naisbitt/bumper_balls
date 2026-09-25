@@ -133,6 +133,13 @@ func active_count() -> int:
 func is_human(slot_index: int) -> bool:
 	return slots[slot_index]["control"] == Driver.HUMAN
 
+## The slot the on-screen touch controls drive: the first human one, or -1.
+func first_human_slot() -> int:
+	for i in slots.size():
+		if is_human(i):
+			return i
+	return -1
+
 func human_count() -> int:
 	var n := 0
 	for s in slots:
