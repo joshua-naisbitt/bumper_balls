@@ -216,6 +216,9 @@ match to each one.
 
 ## How it fits together
 
+Want to understand the code properly? [docs/GUIDE.md](docs/GUIDE.md) walks you
+through rebuilding the game yourself, from an empty folder to the full thing.
+
 ```
 scripts/
   game_config.gd   autoload: roster, slot assignment, scores
